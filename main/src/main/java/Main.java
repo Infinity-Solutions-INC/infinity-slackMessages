@@ -9,11 +9,11 @@ public class Main {
     public static void main(String[] args) throws SlackApiException, IOException {
         ConexaoBd conexao = new ConexaoBd();
 
-//        MensagemError msgErro = new MensagemError();
-//        MensagemRecomendacao msgReco = new MensagemRecomendacao();
-//
-//        msgReco.enviarMensagem();
-//        msgErro.enviarMensagem();
+        NotificacaoErrors msgErro = new NotificacaoErrors();
+        NotificacaoRecomendacao msgReco = new NotificacaoRecomendacao();
+
+        msgReco.enviarNotificacao();
+        msgErro.enviarNotificacao();
 
         SqlQuerys.consultarLogsError();
 
