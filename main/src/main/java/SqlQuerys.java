@@ -14,7 +14,7 @@ public class SqlQuerys {
 
     public static void consultarLogsError() throws SlackApiException, IOException {
 //        LocalDate dataHoje = LocalDate.now();
-        String dataHoje = "%2024-11-26%";
+        String dataHoje = "%2024-11-29%";
 
         Integer qtdLinhas = connection.queryForObject(
                 """
