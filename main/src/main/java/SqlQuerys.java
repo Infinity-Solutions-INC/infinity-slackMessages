@@ -10,17 +10,16 @@ import java.time.format.DateTimeFormatter;
 public class SqlQuerys {
     private static ConexaoBd dbConnectionProvider = new ConexaoBd();
     private static JdbcTemplate connection = dbConnectionProvider.getConnection();
-    LocalDate dataHoje = LocalDate.now();
 
     public static void consultarLogsError() throws SlackApiException, IOException {
-//        LocalDate dataHoje = LocalDate.now();
-        String dataHoje = "%2024-11-29%";
+        LocalDate dataHoje = LocalDate.now();
+        String dataParaConsulta = "%" + dataHoje + "%";
 
         Integer qtdLinhas = connection.queryForObject(
                 """
                         select count(id) from error_logs where dt_hr_captacao_error like ?""",
                 Integer.class,
-                dataHoje
+                dataParaConsulta
         );
 
         if (qtdLinhas > 0) {
@@ -68,4 +67,36 @@ public class SqlQuerys {
         msgError.setMensagem(slackMessage);
         msgError.enviarNotificacao();
     }
+
+    public static void calcularPorcentagemEvasao() throws SlackApiException, IOException {
+        Boolean arquivoInseridoHoje = verificarDataArquivo();
+
+        if (arquivoInseridoHoje) {
+            Integer qtdTurmasInsUltimoArqv = connection.queryForObject("""
+                SELECT qtdTurmasInseridas_arquivo from arquivoLido where id = (select id from arquivoLido order by id desc limit 1) - 1;
+                """, Integer.class);
+
+            Integer qtdTurmasInsArqvRecente = connection.queryForObject("""
+                SELECT qtdTurmasInseridas_arquivo from arquivoLido order by id desc limit 1;
+                """, Integer.class);
+
+            Double variacaoPercentual = (qtdTurmasInsArqvRecente - qtdTurmasInsUltimoArqv) / qtdTurmasInsUltimoArqv * 100.0;
+
+            NotificacaoRecomendacao notfRecomendacao = new NotificacaoRecomendacao();
+            notfRecomendacao.gerarMensagem(variacaoPercentual, qtdTurmasInsArqvRecente);
+        }
+    }
+
+    public static Boolean verificarDataArquivo() {
+        String dataArquivo = connection.queryForObject("""
+                SELECT dataLeitura_arquivo from arquivoLido order by id desc limit 1;
+                """, String.class);
+
+        if (dataArquivo.equals(LocalDate.now())) {
+            return true;
+        }
+
+        return false;
+    }
+
 }
